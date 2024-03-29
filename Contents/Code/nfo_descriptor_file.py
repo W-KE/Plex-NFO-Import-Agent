@@ -1,5 +1,5 @@
+import io
 import os
-import re
 from xml.dom import minidom
 from dateutil.parser import parse
 
@@ -11,10 +11,13 @@ class NfoDescriptorFile:
     def __init__(self, nfo_file_path):
         self.nfo_file_path = nfo_file_path
         if not os.path.isfile(self.nfo_file_path):
-            raise FileNotFoundError("NFO file does not exist! %s", self.nfo_file_path)
+            raise IOError("NFO file does not exist! %s", self.nfo_file_path)
 
-        with open(self.nfo_file_path, "r", encoding="utf-8") as file:
-            nfo_data = minidom.parseString(file.read().replace("&", "&amp;"))
+        with io.open(self.nfo_file_path, "r", encoding="utf-8") as fp:
+            content = fp.read().replace("&", "&amp;")
+            content = content.encode('utf-8')
+            print content
+            nfo_data = minidom.parseString(content)
         movies = nfo_data.getElementsByTagName('movie')
         if movies:
             self.nfo_movie = movies[0]
@@ -62,7 +65,7 @@ class NfoDescriptorFile:
         return self.get_unique_root_element_value('certification', default)
 
     def get_studio(self, default=None):
-        return str(self.get_unique_root_element_value('studio', default))
+        return self.get_unique_root_element_value('studio', default)
 
     def get_premiered(self, default=None):
         parsed_date = default
@@ -98,7 +101,7 @@ class NfoDescriptorFile:
         for rating in ratings:
             votes = rating.getElementsByTagName('votes')[0].firstChild.data
             votes = int(str(votes).strip())
-            if (votes > rating_votes):
+            if votes > rating_votes:
                 rating_votes = votes
                 value = rating.getElementsByTagName('value')[0].firstChild.data
                 rating_value = float(str(value).strip())
@@ -109,7 +112,7 @@ class NfoDescriptorFile:
         director_list = []
         directors = self.get_unique_root_element('credits')
         for director in directors:
-            name = str(director.firstChild.data).strip()
+            name = director.firstChild.data.strip()
             director_list.append(name)
 
         return director_list
@@ -118,7 +121,7 @@ class NfoDescriptorFile:
         director_list = []
         directors = self.get_unique_root_element('director')
         for director in directors:
-            name = str(director.firstChild.data).strip()
+            name = director.firstChild.data.strip()
             director_list.append(name)
 
         return director_list
@@ -127,7 +130,7 @@ class NfoDescriptorFile:
         genre_list = []
         genres = self.get_unique_root_element('genre')
         for genre in genres:
-            name = str(genre.firstChild.data).strip()
+            name = genre.firstChild.data.strip()
             genre_list.append(name)
 
         return genre_list
@@ -136,7 +139,7 @@ class NfoDescriptorFile:
         country_list = []
         countries = self.get_unique_root_element('country')
         for country in countries:
-            name = str(country.firstChild.data).strip()
+            name = country.firstChild.data.strip()
             country_list.append(name)
 
         return country_list
@@ -147,7 +150,7 @@ class NfoDescriptorFile:
         for collectionset in sets:
             try:
                 setname = collectionset.getElementsByTagName('name')[0].firstChild.data
-                setname = str(setname).strip()
+                setname = setname.strip()
                 set_list.append(setname)
             except:
                 pass
@@ -183,12 +186,13 @@ class NfoDescriptorFile:
         return actor_list
 
     def get_unique_root_element_value(self, tagname, default=None):
-        try:
-            node = self.get_unique_root_element(tagname)
-            nodezero = node[0].firstChild
-            value = str(nodezero.data).strip()
-        except:
-            value = default
+        node = self.get_unique_root_element(tagname)
+        if len(node) == 0:
+            return default
+        nodezero = node[0].firstChild
+        if nodezero is None:
+            return default
+        value = nodezero.data.strip()
 
         return value
 
