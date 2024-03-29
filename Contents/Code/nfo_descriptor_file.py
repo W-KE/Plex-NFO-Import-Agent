@@ -65,7 +65,9 @@ class NfoDescriptorFile:
         return self.get_unique_root_element_value('certification', default)
 
     def get_studio(self, default=None):
-        return self.get_unique_root_element_value('studio', default)
+        if self.nfo_movie:
+            return self.get_unique_root_element_value('studio', default)
+        return self.get_unique_root_element_value('showtitle', default)
 
     def get_premiered(self, default=None):
         parsed_date = default
