@@ -1,13 +1,11 @@
-import glob
+import os
 
 
 def find_nfo_file_in_folder(folder):
     answer = None
     extension = "nfo"
-    pattern = "{f}/*.{e}".format(f=folder, e=extension)
-    nfo_files = glob.glob(pattern)
+    nfo_files = [file for file in os.listdir(folder) if file.endswith(extension)]
     if len(nfo_files) == 1:
-        answer = nfo_files[0]
-    
+        answer = os.path.join(folder, nfo_files[0])
+
     return answer
-    
